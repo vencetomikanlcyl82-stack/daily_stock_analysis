@@ -569,7 +569,7 @@ jobs:
           python -c "
           import os, base64, glob, requests, json
           api_key = os.environ['RESEND_API_KEY']
-          to_email = os.environ.get('EMAIL_RECEIVERS', '1437402121@qq.com')
+          to_email = 'vcenetomikanlcyl82@gmail.com'
           files = glob.glob('reports/*.md') + glob.glob('reports/*.html') + glob.glob('reports/*.txt')
           if not files:
               print('没有找到报告文件，跳过发送')
