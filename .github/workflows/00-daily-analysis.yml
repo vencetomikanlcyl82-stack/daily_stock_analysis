@@ -559,7 +559,7 @@ jobs:
             logs/
           retention-days: 30
 
-            - name: 发送报告邮件
+        - name: 发送报告邮件
         if: always()
         env:
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
