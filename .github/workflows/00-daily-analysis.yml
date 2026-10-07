@@ -566,24 +566,27 @@ jobs:
         run: |
           pip install requests
           python -c "
-          import os, base64, glob, requests, json
+          import os, glob, requests, json
           api_key = os.environ['BREVO_API_KEY']
           to_email = '1437402121@qq.com'
-          files = glob.glob('reports/*.md') + glob.glob('reports/*.html') + glob.glob('reports/*.txt')
+          
+          # 读取报告内容，作为邮件正文
+          files = glob.glob('reports/*.md')
           if not files:
               print('没有找到报告文件，跳过发送')
               exit(0)
-          attachments = []
+          
+          html_content = '<h2>今日股票分析报告</h2>'
           for f in files:
-              with open(f, 'rb') as fp:
-                  content = base64.b64encode(fp.read()).decode()
-              attachments.append({'name': os.path.basename(f), 'content': content})
+              with open(f, 'r', encoding='utf-8') as fp:
+                  content = fp.read()
+              html_content += f'<h3>{os.path.basename(f)}</h3><pre style=\"white-space: pre-wrap; font-family: sans-serif;\">{content}</pre>'
+          
           body = {
               'sender': {'name': '股票分析助手', 'email': 'vcenetomikanlcyl82@gmail.com'},
               'to': [{'email': to_email}],
               'subject': '每日股票分析报告',
-              'htmlContent': '<p>今日分析报告已生成，请查看附件。</p>',
-              'attachment': attachments
+              'htmlContent': html_content
           }
           r = requests.post('https://api.brevo.com/v3/smtp/email',
                             headers={'api-key': api_key, 'Content-Type': 'application/json'},
