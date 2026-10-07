@@ -583,7 +583,7 @@ jobs:
               html_content += f'<h3>{os.path.basename(f)}</h3><pre style=\"white-space: pre-wrap; font-family: sans-serif;\">{content}</pre>'
           
           body = {
-              'sender': {'name': '股票分析助手', 'email': 'vcenetomikanlcyl82@gmail.com'},
+              'sender': {'name': '股票分析助手', 'email': 'report@dabeishui.com'},
               'to': [{'email': to_email}],
               'subject': '每日股票分析报告',
               'htmlContent': html_content
