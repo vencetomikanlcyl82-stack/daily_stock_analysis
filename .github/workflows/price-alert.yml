@@ -1,0 +1,83 @@
+name: 股票价格预警
+
+on:
+  schedule:
+    # 工作日北京时间 21:30（UTC 13:30）开始，每 5 分钟跑一次
+    # 覆盖美股盘前和盘中时段
+    - cron: '*/5 13-21 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  price-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install yfinance requests
+
+      - name: 检查价格并触发预警
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+        run: |
+          python -c "
+          import yfinance as yf
+          import requests, json, os
+
+          # ========== 在这里配置你要预警的股票 ==========
+          # 格式：'股票代码': (预警方向, 价格阈值)
+          # 'below' 表示跌到该价格以下触发，'above' 表示涨到该价格以上触发
+          alerts = {
+              'QQQ': ('below', 700.0),
+              'AAOI': ('below', 96.0),
+              'SPCX': ('below', 146.0),
+              'MU': ('below', 935.0),
+              'MU': ('above', 1200.0),
+          }
+          # ============================================
+
+          api_key = os.environ['BREVO_API_KEY']
+          to_email = '1437402121@qq.com'
+          sender_email = 'report@dabeishui.com'
+
+          triggered = []
+          for symbol, (direction, threshold) in alerts.items():
+              try:
+                  ticker = yf.Ticker(symbol)
+                  price = ticker.fast_info['last_price']
+                  print(f'{symbol}: 当前价 {price:.2f}, 阈值 {threshold} ({direction})')
+
+                  if direction == 'below' and price < threshold:
+                      triggered.append(f'{symbol} 当前价 {price:.2f}，已跌破 {threshold}')
+                  elif direction == 'above' and price > threshold:
+                      triggered.append(f'{symbol} 当前价 {price:.2f}，已涨破 {threshold}')
+              except Exception as e:
+                  print(f'{symbol}: 获取价格失败 - {e}')
+
+          if not triggered:
+              print('没有触发预警，跳过发送')
+              exit(0)
+
+          # 发送邮件
+          html = '<h2>股票价格预警</h2><ul>'
+          for t in triggered:
+              html += f'<li>{t}</li>'
+          html += '</ul>'
+
+          body = {
+              'sender': {'name': '价格预警', 'email': sender_email},
+              'to': [{'email': to_email}],
+              'subject': '⚠️ 股票价格预警触发',
+              'htmlContent': html
+          }
+          r = requests.post('https://api.brevo.com/v3/smtp/email',
+                            headers={'api-key': api_key, 'Content-Type': 'application/json'},
+                            data=json.dumps(body))
+          print('Brevo 返回:', r.status_code, r.text)
+          "
