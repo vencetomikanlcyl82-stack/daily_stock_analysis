@@ -34,7 +34,7 @@ jobs:
           # 格式：'股票代码': (预警方向, 价格阈值)
           # 'below' 表示跌到该价格以下触发，'above' 表示涨到该价格以上触发
           alerts = {
-              'QQQ': ('below', 800.0),
+              'QQQ': ('below', 700.0),
               'AAOI': ('below', 96.0),
               'SPCX': ('below', 146.0),
               'MU': ('below', 935.0),
